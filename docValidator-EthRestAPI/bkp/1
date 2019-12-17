@@ -1,0 +1,84 @@
+// server.js
+const assert = require ('assert');
+const path = require ('path');
+const fs = require ('fs');
+
+// =============== Start of REST Related entries ===============
+const express        = require('express');
+const bodyParser     = require('body-parser');
+const cors     = require('cors');
+
+const app            = express();
+app.use (express.json());
+app.use (cors());
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+
+//=============== Start of Ethereum Related entries ===============
+const Web3 = require ('web3');
+
+let ACCOUNT = "0x9BAa461020500FF7eb04AC0c2f40ec49412d505F";
+let PROVIER_URL = "http://127.0.0.1:8888";
+const web3 = new Web3(new Web3.providers.HttpProvider(PROVIER_URL));
+
+const abiPath = path.resolve(__dirname, 'contracts', 'docValidator.abi');
+const binPath = path.resolve(__dirname, 'contracts', 'docValidator.bin');
+
+const interface = fs.readFileSync(abiPath, 'utf8');
+//const bytecode = JSON.parse(fs.readFileSync(binPath)).object;
+
+
+//console.log ("interface----------------" + interface);
+//console.log ("bytecode-----------------" + bytecode);
+console.log ("\n---------------------------------------\n");
+
+
+// =====================Satrt ther server===========================
+const port = process.env.PORT || 9000;
+
+app.get('/api/ethblock', (req, res) => {
+    console.log("Inside GET: /api/ethblock");
+});
+
+app.post('/api/ethblock', (req, res) => {
+	console.log("inside POST /api/ethblock");
+	console.log("req.body------111" + JSON.stringify(req.body)); 
+
+addToEth(req.body,res);
+	// END--------------------------------------------------------------------------
+	res.send(200);
+});
+
+async function addToEth (bodyData, res) {
+  let response;
+  let responseRead;
+  try {
+  
+  let result = await web3.eth.personal.unlockAccount(ACCOUNT, "oracle", 10000);
+
+  console.log("Result of unloack-------" + result);
+
+    console.log ("File Hash is :" + "0x"+bodyData.fileHash);
+    console.log ("interface----------------" + interface);
+    response = await interface.methods.addDoc(bodyData.docId,
+    	bodyData.fromWFStatus,
+    	bodyData.toWFStatus,
+    	"0x"+bodyData.fileHash).send({from: ACCOUNT, gas:1000000});
+  		console.log("***************Record added to blockchain***************");
+
+      responseRead = await interface.methods.getDoc(bodyData.docId,
+        bodyData.fromWFStatus,
+        bodyData.toWFStatus).send({from: ACCOUNT, gas:1000000});
+        console.log ("------------------responseRead---------------::::" + responseRead);
+      
+  } catch (err) {
+    console.log('Error', err)
+    return res.status(500).send()
+  }
+}
+
+app.listen(port, () => {
+  console.log('We are live on... ' + port);
+});

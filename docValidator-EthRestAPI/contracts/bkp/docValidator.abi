@@ -1,0 +1,55 @@
+[
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_docId",
+				"type": "string"
+			},
+			{
+				"name": "_fromState",
+				"type": "string"
+			},
+			{
+				"name": "_toState",
+				"type": "string"
+			}
+		],
+		"name": "getDoc",
+		"outputs": [
+			{
+				"name": "",
+				"type": "string"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_docId",
+				"type": "string"
+			},
+			{
+				"name": "_fromState",
+				"type": "string"
+			},
+			{
+				"name": "_toState",
+				"type": "string"
+			},
+			{
+				"name": "_docHash",
+				"type": "bytes"
+			}
+		],
+		"name": "addDoc",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+]
