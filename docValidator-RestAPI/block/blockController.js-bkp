@@ -1,0 +1,39 @@
+var express = require('express');
+var router = express.Router();
+var bodyParser = require('body-parser');
+
+router.use(bodyParser.urlencoded({ extended: true }));
+router.use(bodyParser.json());
+var BlockEntry = require('./BlockEntry');
+
+router.post('/', function (req, res) {
+    console.log("Inside POST...");
+    console.log(req.body);
+    console.log("Request parameter received:" + req.files.file);
+    console.log("docis is ....." + req.body.docId);
+    console.log("docTitle is ....." + req.body.docTitle);
+    console.log("fromWFStatus is ....." + req.body.fromWFStatus);
+    console.log("toWFStatus is ....." + req.body.toWFStatus);
+
+    BlockEntry.create({
+			docId: req.body.docId,
+			docTitle: req.body.docTitle,
+			fromState: req.body.fromState,
+			toState: req.body.toState,
+			hash: req.body.hash,
+			fileLocation: req.body.fileLocation
+        }, 
+        function (err, block) {
+            if (err) return res.status(500).send("There was a problem adding the information to the database.");
+            res.status(200).send(block);
+        });
+});
+// RETURNS ALL THE USERS IN THE DATABASE
+router.get('/', function (req, res) {
+    BlockEntry.find({}, function (err, blocks) {
+        if (err) return res.status(500).send("There was a problem finding the users.");
+        res.status(200).send(blocks);
+    });
+});
+
+module.exports = router;

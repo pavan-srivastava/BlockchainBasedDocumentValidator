@@ -1,0 +1,110 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const path = require('path');
+const sha256 = require ('sha256');
+const web3 = require('web3');
+var Request = require("request");
+var cors  = require ('cors');
+
+//const FileReader = require ('filereader');
+    var fs = require('fs');
+
+var app = express();
+app.use(cors());
+var upload = require('express-fileupload');
+const http = require('http');
+http.Server(app).listen(5555); // make server listen on port 5555
+
+app.use(upload()); // configure middleware
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended:false}));
+
+
+console.log("Server Started at port 5555..");
+
+app.post('/blockEntires',function(req,finalResponse){
+  var docId = req.body.docId;
+  var docTitle = req.body.docTitle;
+  var fromWFStatus = req.body.fromWFStatus;
+  var toWFStatus = req.body.toWFStatus;
+  
+  console.log("docId ->" + docId);
+  console.log("docTitle ->" + docTitle);
+  console.log("fromWFStatus ->" + fromWFStatus);
+  console.log("toWFStatus ->" + toWFStatus);
+  
+  let postData = {
+    "docId" : docId,
+    "docTitle" : docTitle,
+    "fromWFStatus" : fromWFStatus,
+    "toWFStatus" : toWFStatus,
+    "fileHash": null
+  };
+
+  if(!req.files)
+  {
+    console.log("No file was uplaoded.");
+    finalResponse.send("Error..."); 
+  }
+    var uploadedFile = req.files.uploadedFile;
+    var uploadedFileName = uploadedFile.name;
+    console.log (req.files);
+
+    var uploadpath = __dirname + '/uploads/' + uploadedFileName;
+    uploadedFile.mv(uploadpath,function(err){
+      if(err){
+        console.log("File Upload Failed",uploadedFileName,err);
+        //res.send("Error Occured!")
+      }
+      else {
+        console.log("File Uploaded...",uploadedFileName);
+        // Calculate hash using SHA256
+        fs.readFile(uploadpath, 'utf8', function(err, data) {
+          if (err) throw err;
+          console.log('OK: ' + uploadpath);
+          console.log(data)
+          console.log ("File hash is:::"+sha256(data));
+          this.postData.fileHash = sha256(data);
+
+          // Store in blockchain.
+          console.log("postData is :::"+postData);
+          Request.post({
+            "headers": { "content-type": "application/json" },
+            "url": "http://localhost:9000/api/ethblock",
+            "body": JSON.stringify(postData)
+          }, (error, response, body) => {
+            if(error) {
+                return console.log(error);
+            }
+            else
+            {
+              console.log("-------SUCCESS: Entry added on blockchain succesfully......");
+                //------- Call REST API to save data in MongoDB.
+                Request.post({
+                  "headers": { "content-type": "application/json" },
+                  "url": "http://localhost:8000/api/dbblock",
+                  "body": JSON.stringify(postData)
+                }, (error, response, body) => {
+                  
+                  console.log("Response from DB Service ::" + body);
+                  if(error) {
+                      return console.log(error);
+                  }
+                  else {
+                    console.log("Response form DB Service" + JSON.stringify(response.body));
+                    finalResponse.send(response.body);
+                    finalResponse.end();
+                  }
+                  // console.log(JSON.parse(body));
+              });
+              //------- Call REST API to save data in MongoDB - End
+            }
+            // console.log(JSON.parse(body));
+        });          
+    // Store in blockchain.-Ends
+
+ 
+        })
+})
+    })
+  })
