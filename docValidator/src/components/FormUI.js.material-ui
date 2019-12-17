@@ -1,0 +1,144 @@
+import React, {Component} from 'react';
+import {FormGroup,  ControlLabel, Button, Jumbotron,DropdownButton} from 'react-bootstrap';
+import Dropzone from 'react-dropzone';
+import axios from 'axios';
+import TextField from 'material-ui/TextField';
+import Paper from 'material-ui/Paper';
+import InputLabel from 'material-ui/Input/InputLabel';
+import MenuItem from 'material-ui/Menu/MenuItem';
+import FormControl from 'material-ui/Form/FormControl';
+import Select from 'material-ui/Select';
+
+// import FileUploader from './FileUploader';
+
+class FormUI extends Component { 
+    constructor(props)
+    {
+        super(props);
+        this.state = {
+            docId:"",
+            docTitle:"",
+            fromWFStatus:"",
+            toWFStatus:"",
+            uploadedFiles:[]
+        };        
+        this.handleChange = this.handleChange.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
+        this.onDrop = this.onDrop.bind(this);
+    }
+    onDrop(acceptedFiles, rejectedFiles) {
+        this.setState({uploadedFiles:acceptedFiles});
+        event.preventDefault();
+    }
+  
+    handleChange(event) {
+        event.preventDefault();
+        console.log("event target is ->" + event.target.name);
+        console.log('Name is ' + event.target.name); 
+        console.log( 'Value is '+ event.target.value);
+        this.setState({[event.target.name] : event.target.value});
+    }
+    
+    handleSubmit(event) {
+        console.log("----------FormUI:Entering handleSubmit.......");
+        event.preventDefault();
+
+        const formData = new FormData();
+        formData.append('uploadedFile', this.state.uploadedFiles[0]);
+        formData.append('docId',this.state.docId);
+        formData.append('docTitle',this.state.docTitle);
+        formData.append('fromWFStatus',this.state.fromWFStatus);
+        formData.append( 'toWFStatus', this.state.toWFStatus);
+
+        console.log("---------Form Data is" + formData);
+
+        axios.post('http://localhost:5555/blockEntires', formData)
+        .then( (response) => {
+            console.log("--------Received response from server..."+ JSON.stringify(response.body));
+            this.props.updateParentState(this.state);
+        }).catch(function (error) {
+            console.log(error);
+        });
+    }
+
+      render (){
+        return(
+            <Paper>
+            <form onSubmit={this.handleSubmit}>
+                <TextField
+                    name='docId'
+                    label='Doc Id'
+                    value={this.state.docId}
+                    onChange={this.handleChange.bind(this)}
+                    margin='normal'
+                />
+               <br/>
+                <TextField
+                    name='docTitle'
+                    label='Document Title'
+                    value={this.state.docTitle}
+                    onChange={this.handleChange.bind(this)}
+                    margin='normal'
+                />
+            <br/>
+            <FormControl>
+                <InputLabel htmlFor="from-wf-simple">From Workflow</InputLabel>
+                <Select
+                    value={this.state.fromWFStatus} 
+                    onChange={this.handleChange}
+                    inputProps={{
+                        name: 'fromWFStatus',
+                        id: 'fromWFStatus',
+                      }}
+                    >
+                    <MenuItem value="">
+                    <em>None</em>
+                    </MenuItem>
+                    <MenuItem value="Draft">Draft</MenuItem>
+                    <MenuItem value="Approval">Approval</MenuItem>
+                </Select>
+            </FormControl>
+            <br/>          
+            <FormControl>
+                <InputLabel htmlFor="to-wf-simple">To Workflow</InputLabel>
+                <Select
+                    value={this.state.toWFStatus} 
+                    onChange={this.handleChange}
+                    inputProps={{
+                        name: 'toWFStatus',
+                        id: 'toWFStatus',
+                      }}
+                    >
+                    <MenuItem value="">
+                    <em>None</em>
+                    </MenuItem>
+                    <MenuItem value="Draft">Draft</MenuItem>
+                    <MenuItem value="Approval">Approval</MenuItem>
+                </Select>
+            </FormControl>
+            <br/>
+   
+            <Button
+            variant="inherit" 
+            color="primary"
+            containerElement='label' // <-- Just add me!
+            label='My Label'>
+            <input type="file" />
+            </Button>            
+
+
+
+            <Button 
+            onChange={this.handleSubmit.bind(this)}
+            name="submit"
+            valut="bubmit" 
+            type="submit"
+            bsStyle="primary"
+            >Submit
+            </Button>
+            </form>
+            </Paper>
+            )
+    }
+}
+export default FormUI;
