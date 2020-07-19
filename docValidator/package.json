@@ -26,7 +26,7 @@
     "bootstrap": "^4.1.1",
     "filereader": "^0.10.3",
     "jquery": "^3.3.1",
-    "lodash": "^3.10.1",
+    "lodash": "^4.17.19",
     "material-ui": "^1.0.0-beta.41",
     "material-ui-dropzone": "^1.0.3",
     "popper": "^1.0.1",
